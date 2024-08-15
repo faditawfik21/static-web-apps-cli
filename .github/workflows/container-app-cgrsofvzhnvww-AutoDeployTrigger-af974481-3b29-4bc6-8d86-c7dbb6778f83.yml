@@ -1,0 +1,47 @@
+name: Trigger auto deployment for container-app-cgrsofvzhnvww
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'cypress/fixtures/api/**'
+    - '.github/workflows/container-app-cgrsofvzhnvww-AutoDeployTrigger-af974481-3b29-4bc6-8d86-c7dbb6778f83.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.CONTAINERAPPCGRSOFVZHNVWW_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.CONTAINERAPPCGRSOFVZHNVWW_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.CONTAINERAPPCGRSOFVZHNVWW_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/cypress/fixtures/api 
+          registryUrl: 
+          registryUsername: ${{ secrets.CONTAINERAPPCGRSOFVZHNVWW_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CONTAINERAPPCGRSOFVZHNVWW_REGISTRY_PASSWORD }}
+          containerAppName: container-app-cgrsofvzhnvww
+          resourceGroup: staticwebappscli8cc6
+          imageToBuild: default/container-app-cgrsofvzhnvww:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
